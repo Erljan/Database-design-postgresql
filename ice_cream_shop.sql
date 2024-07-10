@@ -28,10 +28,10 @@ CREATE TABLE shop(
 
 -- SELECT setval('shop_id_seq', (SELECT MAX(id) FROM shop));
 -- INSERT INTO shop (empl_id) VALUES (2);
-INSERT INTO shop (loc_id, sales_id) 
+INSERT INTO shop (empl_id,loc_id, sales_id) 
     VALUES
-        (1,1),
-        (2,1);
+        (1,1,1),
+        (2, 2,1);
 
 
 DROP TABLE IF EXISTS work_hrs CASCADE;
@@ -45,6 +45,20 @@ INSERT INTO work_hrs (working_hour) VALUES
     ('9AM-3PM'),
     ('3PM-9PM');
 
+DROP TABLE IF EXISTS employee_work_hrs;
+CREATE TABLE employee_work_hrs(
+    ewh_id SERIAL PRIMARY KEY,
+    empl_id INT,
+    hours_id INT,
+    FOREIGN KEY (empl_id) REFERENCES employees(empl_id),
+    FOREIGN KEY (hours_id) REFERENCES work_hrs(hours_id)
+);
+
+INSERT INTO employee_work_hrs (empl_id, work_hrs) 
+    VALUES
+        (1, 1),
+        (2,1),
+        (3, 2);
 
 
 DROP TABLE IF EXISTS employees CASCADE;
@@ -52,15 +66,19 @@ CREATE TABLE employees (
     empl_id SERIAL PRIMARY KEY,
     empl_name VARCHAR(255),
     empl_num INT CHECK (empl_num >= 3),
-    hours_id INT,
-    position VARCHAR(20) DEFAULT('Clerk'),
-    FOREIGN KEY (hours_id) REFERENCES work_hrs(hours_id)
+    position VARCHAR(20) DEFAULT('Clerk')
 );
 
 INSERT INTO employees (empl_name, hours_id, position) VALUES
-    ('Erljan', 1, 'Manager'),
-    ('Andrew', 1, 'Clerk'),
-    ('Kenny', 2, 'Clerk');
+    ('Erljan','Manager'),
+    ('Andrew','Clerk'),
+    ('Kenny', 'Clerk');
+
+
+-- SELECT *
+-- FROM shop
+-- JOIN employees
+-- ON shop.empl_id = employees.empl_id
 
 -- SELECT setval('employees_empl_id_seq', (SELECT MAX(empl_id) FROM employees));
 
@@ -103,6 +121,10 @@ INSERT INTO cones (cones_type, cones_number)
         ('sugar', 8),
         ('cake', 5);
 
+
+SELECT obj_description('cones'::regclass);
+
+EXPLAIN ANALYZE SELECT * FROM cones WHERE cones_number > 5;
         
 DROP TABLE IF EXISTS sales CASCADE;
 CREATE TABLE sales(
@@ -131,3 +153,33 @@ INSERT INTO transactions (price, cones_id)
         (7.99, 1);
         -- (6.99, 2),
         -- (7.99, 1);
+
+SELECT *
+FROM transactions
+JOIN sales
+ON transactions.transac_id = sales.transac_id;
+
+
+
+SELECT shop.id, shop.empl_id, employees.empl_id, employees.empl_name, employees.position
+FROM shop
+JOIN employees
+ON shop.empl_id = employees.empl_id;
+
+
+SELECT shop.id, shop.empl_id, employees.empl_id, employees.empl_name, employees.position
+FROM shop
+LEFT JOIN employees
+ON shop.empl_id = employees.empl_id;
+
+
+SELECT shop.id, shop.empl_id, employees.empl_id, employees.empl_name, employees.position
+FROM shop
+RIGHT JOIN employees
+ON shop.empl_id = employees.empl_id;
+
+
+SELECT shop.id, shop.empl_id, employees.empl_id, employees.empl_name, employees.position
+FROM shop
+FULL OUTER JOIN employees
+ON shop.empl_id = employees.empl_id;
